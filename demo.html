@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpellChecker Pro - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .editor-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .errors-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .error-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #f44336;
+            background: #ffebee;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .error-item:hover {
+            background: #ffcdd2;
+            transform: translateX(5px);
+        }
+
+        .error-word {
+            font-weight: bold;
+            color: #d32f2f;
+            font-size: 1.1em;
+        }
+
+        .error-message {
+            color: #666;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .suggestion {
+            padding: 5px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .no-errors {
+            text-align: center;
+            padding: 40px;
+            color: #4caf50;
+        }
+
+        .no-errors svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+        }
+
+        .corrected-text {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .corrected-text.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .corrected-text h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .corrected-text-content {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .highlight-change {
+            background: #fff59d;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ SpellChecker Pro</h1>
+            <p>Проверка орфографии в реальном времени</p>
+        </div>
+
+        <div class="main-content">
+            <div class="card editor-card">
+                <h2 style="margin-bottom: 15px;">Текст для проверки</h2>
+                <textarea id="textInput" placeholder="Введите или вставьте текст для проверки орфографии..."></textarea>
+                <div class="controls">
+                    <button class="btn-primary" onclick="checkText()">🔍 Проверить</button>
+                    <button class="btn-secondary" onclick="clearText()">🗑️ Очистить</button>
+                    <select id="language" style="padding: 12px; border-radius: 8px; border: 2px solid #e0e0e0;">
+                        <option value="auto">Авто</option>
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+
+                <!-- Corrected Text Panel -->
+                <div id="correctedText" class="corrected-text">
+                    <h3>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Исправленный текст
+                    </h3>
+                    <div id="correctedTextContent" class="corrected-text-content"></div>
+                    <button class="copy-btn" onclick="copyCorrectedText()">📋 Копировать исправленный текст</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 15px;">Статистика</h3>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="wordCount">0</div>
+                            <div class="stat-label">Слов</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="errorCount">0</div>
+                            <div class="stat-label">Ошибок</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="charCount">0</div>
+                            <div class="stat-label">Символов</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="readTime">0</div>
+                            <div class="stat-label">Мин чтения</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">Найденные ошибки</h3>
+                    <div id="errorsList" class="errors-list">
+                        <div class="no-errors">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p>Начните вводить текст для проверки</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let debounceTimer;
+        const textInput = document.getElementById('textInput');
+
+        textInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(checkText, 1000);
+        });
+
+        async function checkText() {
+            const text = textInput.value.trim();
+            const language = document.getElementById('language').value;
+
+            if (!text) {
+                document.getElementById('errorsList').innerHTML = `
+                    <div class="no-errors">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p>Начните вводить текст для проверки</p>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('errorsList').innerHTML = '<div class="loading">⏳ Проверка...</div>';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text, language })
+                });
+
+                const data = await response.json();
+
+                // Update stats
+                document.getElementById('wordCount').textContent = data.stats.words;
+                document.getElementById('errorCount').textContent = data.errors.length;
+                document.getElementById('charCount').textContent = data.stats.characters;
+                document.getElementById('readTime').textContent = data.stats.readingTime;
+
+                // Generate corrected text
+                if (data.errors.length > 0) {
+                    const result = generateCorrectedText(text, data.errors);
+                    displayCorrectedText(result, text);
+                } else {
+                    document.getElementById('correctedText').classList.remove('show');
+                }
+
+                // Display errors
+                if (data.errors.length === 0) {
+                    document.getElementById('errorsList').innerHTML = `
+                        <div class="no-errors">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p>Ошибок не найдено! 🎉</p>
+                        </div>
+                    `;
+                } else {
+                    const errorsHtml = data.errors.map(error => `
+                        <div class="error-item">
+                            <div class="error-word">${error.word}</div>
+                            <div class="error-message">${error.message}</div>
+                            ${error.suggestions && error.suggestions.length > 0 ? `
+                                <div class="suggestions">
+                                    ${error.suggestions.map(s => `
+                                        <span class="suggestion" onclick="applySuggestion(${error.offset}, ${error.length}, '${s}')">${s}</span>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                    document.getElementById('errorsList').innerHTML = errorsHtml;
+                }
+            } catch (error) {
+                document.getElementById('errorsList').innerHTML = `
+                    <div style="color: red; padding: 20px; text-align: center;">
+                        ❌ Ошибка при проверке: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function applySuggestion(offset, length, suggestion) {
+            const text = textInput.value;
+            const before = text.substring(0, offset);
+            const after = text.substring(offset + length);
+            textInput.value = before + suggestion + after;
+            checkText();
+        }
+
+        function generateCorrectedText(originalText, errors) {
+            // Sort errors by offset in reverse order to apply corrections from end to start
+            const sortedErrors = [...errors].sort((a, b) => b.offset - a.offset);
+
+            let correctedText = originalText;
+            const changes = []; // Track all changes for highlighting
+
+            for (const error of sortedErrors) {
+                if (error.suggestions && error.suggestions.length > 0) {
+                    const before = correctedText.substring(0, error.offset);
+                    const after = correctedText.substring(error.offset + error.length);
+                    const replacement = error.suggestions[0];
+
+                    correctedText = before + replacement + after;
+
+                    // Store change info
+                    changes.push({
+                        offset: error.offset,
+                        original: error.word,
+                        replacement: replacement
+                    });
+                }
+            }
+
+            return { correctedText, changes };
+        }
+
+        function displayCorrectedText(result, originalText) {
+            const correctedPanel = document.getElementById('correctedText');
+            const correctedContent = document.getElementById('correctedTextContent');
+            const { correctedText, changes } = result;
+
+            // Build highlighted HTML by finding and marking changed words
+            let highlightedHtml = '';
+            let lastIndex = 0;
+
+            // Sort changes by offset for proper highlighting
+            const sortedChanges = [...changes].sort((a, b) => a.offset - b.offset);
+
+            // Create a map of positions to highlight
+            const highlightPositions = new Set();
+            sortedChanges.forEach(change => {
+                const pos = correctedText.indexOf(change.replacement, lastIndex);
+                if (pos !== -1) {
+                    for (let i = pos; i < pos + change.replacement.length; i++) {
+                        highlightPositions.add(i);
+                    }
+                }
+            });
+
+            // Build HTML with highlights
+            for (let i = 0; i < correctedText.length; i++) {
+                if (highlightPositions.has(i)) {
+                    // Find the full word/phrase to highlight
+                    let start = i;
+                    while (highlightPositions.has(i) && i < correctedText.length) {
+                        i++;
+                    }
+                    highlightedHtml += `<span class="highlight-change">${correctedText.substring(start, i)}</span>`;
+                    i--; // Adjust for loop increment
+                } else {
+                    highlightedHtml += correctedText[i];
+                }
+            }
+
+            correctedContent.innerHTML = highlightedHtml;
+            correctedPanel.classList.add('show');
+        }
+
+        function copyCorrectedText() {
+            const correctedText = document.getElementById('correctedTextContent').innerText;
+            navigator.clipboard.writeText(correctedText).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Скопировано!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function clearText() {
+            textInput.value = '';
+            document.getElementById('wordCount').textContent = '0';
+            document.getElementById('errorCount').textContent = '0';
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('readTime').textContent = '0';
+            document.getElementById('correctedText').classList.remove('show');
+            document.getElementById('errorsList').innerHTML = `
+                <div class="no-errors">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p>Начните вводить текст для проверки</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
